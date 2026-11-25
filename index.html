@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Flippy — Shaxsiy Lug'at Yodlash Sayti</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="icon" type="image/jpeg" href="logo.jpg">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <div class="container">
+
+    <!-- User Profile Bar (Shown when logged in) -->
+    <div class="user-bar" id="userBar" style="display:none;">
+      <div class="user-profile-info">
+        <div class="user-avatar" id="userAvatarInitial">A</div>
+        <div class="user-details">
+          <span class="user-name" id="userFullName">Ali Valiyev</span>
+          <span class="user-meta-sub">
+            <span id="userAgeBadge">10 yosh</span> &nbsp;•&nbsp; <span style="color:#10b981; font-weight:700;">Shaxsiy Lug'atim</span>
+          </span>
+        </div>
+      </div>
+
+      <div class="user-rewards">
+        <div class="badge-reward reward-stars" title="To'plangan yulduzlar">
+          <span>⭐</span> <span id="userStarsCount">20</span>
+        </div>
+        <div class="badge-reward reward-streak" title="Kunlik o'rganish seriyasi">
+          <span>🔥</span> <span id="userStreakCount">1 kun</span>
+        </div>
+        <div class="badge-reward reward-xp" title="Tajriba ochkolari">
+          <span>⚡</span> <span id="userXpCount">0 XP</span>
+        </div>
+        <button class="btn-user-action" id="btnLogoutUser" title="Boshqa profilga o'tish">
+          🚪 Chiqish
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <header class="navbar">
+      <div class="logo-wrap" id="logoClick">
+        <img src="logo.jpg" alt="Flippy Logo" class="navbar-logo-img">
+        <div>
+          <span style="color:#ef4444; font-weight:900;">Flip</span><span style="color:#ec4899; font-weight:900;">py</span>
+        </div>
+      </div>
+
+      <nav class="nav-links">
+        <button class="nav-btn active" id="tabCards">
+          <span>🎮</span> <span>Kartalar bilan yodlash</span>
+        </button>
+        <button class="nav-btn" id="tabDict">
+          <span>📝</span> <span>Mening Lug'atim</span>
+        </button>
+      </nav>
+
+      <div class="nav-controls">
+        <button class="theme-toggle" id="themeToggleBtn" title="Tun / Kun rejimi">🌙</button>
+      </div>
+    </header>
+
+    <!-- Mascot Flippy Cheering Widget -->
+    <div class="mascot-widget" id="mascotWidget">
+      <img src="logo.jpg" alt="Flippy Mascot" class="mascot-img-badge">
+      <div class="mascot-speech" id="mascotSpeechText">
+        Salom do'stim! O'zingiz kiritgan so'zlarni 10 tadan kartalar bilan oson yodlang! 🦉✨
+      </div>
+    </div>
+
+    <!-- ================= SCREEN 1: STUDY FLASHCARDS ================= -->
+    <main class="study-screen" id="studyScreen">
+
+      <!-- Empty state when user has 0 words -->
+      <div id="emptyWordsNotice" style="display:none; text-align:center; background:var(--card-bg); padding:2.5rem 2rem; border-radius:var(--radius-lg); border:1px solid var(--border-color); box-shadow:var(--shadow-md); max-width:540px; margin:1rem auto;">
+        <div style="font-size:3.5rem; margin-bottom:0.5rem;">📝</div>
+        <h3 style="font-size:1.4rem; font-weight:900; margin-bottom:0.5rem;">Lug'atingiz hali bo'sh!</h3>
+        <p style="color:var(--text-muted); font-size:0.95rem; margin-bottom:1.5rem;">
+          Yodlamoqchi bo'lgan so'zlaringizni kiriting va darhol kartalar orqali yodlashni boshlang!
+        </p>
+        <div style="display:flex; gap:0.75rem; justify-content:center; flex-wrap:wrap;">
+          <button class="btn-action btn-known" id="btnEmptyAddSingle" style="padding:0.7rem 1.4rem;">
+            + Bitta so'z qo'shish
+          </button>
+          <button class="btn-action btn-flip" id="btnEmptyAddBulk" style="padding:0.7rem 1.4rem; background:#fef3c7; color:#92400e;">
+            📂 Ommaviy kiritish
+          </button>
+        </div>
+      </div>
+
+      <!-- Active card session -->
+      <div id="activeStudyContainer" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+        <div class="session-info">
+          <div class="session-meta">
+            <span id="progressText" style="color:var(--primary); font-weight:800;">Karta: 1 / 10</span>
+            <span class="session-level-badge" id="sessionLevelBadge">O'z Lug'atim</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+
+        <!-- 3D Flip Card Scene -->
+        <div class="card-scene" id="cardScene" title="Tarjimani ko'rish uchun kartani bosing">
+          <div class="flashcard" id="flashcard">
+
+            <!-- FRONT SIDE (Inglizcha so'z) -->
+            <div class="card-face card-front">
+              <div class="card-top-row">
+                <span class="badge-tag tag-category" id="cardCategory">Lug'at</span>
+                <div class="card-audio-controls">
+                  <!-- Cho'zib/Sekin talaffuz sozlamasi -->
+                  <button class="btn-speed-toggle slow" id="btnSpeedToggle" title="Ovoz tezligini o'zgartirish">
+                    🐢 Sekin (Cho'zib)
+                  </button>
+                  <button class="btn-speaker" id="btnSpeakFront" title="Inglizcha talaffuzni eshitish">
+                    🔊
+                  </button>
+                </div>
+              </div>
+
+              <div class="card-body-content">
+                <span class="badge-tag tag-pos" id="cardPos" style="margin-bottom: 0.5rem;">so'z</span>
+                <h2 class="card-main-word" id="cardMainWord">Apple</h2>
+                <div class="card-phonetic" id="cardPhonetic">[ˈæpl]</div>
+                <div class="card-example-box" id="cardExample">
+                  "I eat a fresh apple every morning."
+                </div>
+              </div>
+
+              <div class="card-flip-prompt">
+                <span>🔄</span> Tarjimani ko'rish uchun kartani bosing
+              </div>
+            </div>
+
+            <!-- BACK SIDE (O'zbek va Ruscha) -->
+            <div class="card-face card-back">
+              <div class="card-top-row">
+                <span class="badge-tag tag-category" style="background:#dcfce7; color:#15803d;">Tarjimasi</span>
+                <span style="font-size:0.8rem; color:var(--text-muted); font-weight:800;">Orqa tomoni</span>
+              </div>
+
+              <div class="card-body-content" style="align-items: flex-start; text-align: left; width: 100%;">
+                <div class="translation-item">
+                  <div class="trans-label">
+                    <span>🇺🇿</span> O'zbekcha:
+                  </div>
+                  <div class="trans-text" id="cardUzTranslation">Olma</div>
+                  <div class="example-trans" id="cardExampleUz">
+                    Men har kuni ertalab yangi olma yeyman.
+                  </div>
+                </div>
+
+                <div class="translation-item" style="margin-top: 0.3rem;">
+                  <div class="trans-label">
+                    <span>🇷🇺</span> Ruscha:
+                  </div>
+                  <div class="trans-text-ru" id="cardRuTranslation">Яблоко</div>
+                  <div class="example-trans" id="cardExampleRu">
+                    Каждое утро я ем свежее яблоко.
+                  </div>
+                </div>
+              </div>
+
+              <div class="card-flip-prompt">
+                <span>↩️</span> Old tomoniga qaytish uchun bosing
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="controls-panel">
+          <button class="btn-action btn-unknown" id="btnAnswerMissed" title="Eslay olmadim">
+            <span>❌ Bilmadim</span>
+          </button>
+
+          <button class="btn-action btn-flip" id="btnFlipCard" title="Kartani aylantirish">
+            <span>🔄 Aylantirish</span>
+          </button>
+
+          <button class="btn-action btn-known" id="btnAnswerKnown" title="Tarjimasini bilaman, davom etish!">
+            <span>✅ Bildim (Davom etish)</span>
+          </button>
+        </div>
+      </div>
+
+    </main>
+
+    <!-- ================= SCREEN 2: RESULTS & MISSED WORDS ================= -->
+    <section class="result-screen" id="resultScreen" style="display:none;">
+      <div class="result-icon">🎉</div>
+      <h2 class="result-title">10 ta karta yakunlandi!</h2>
+      <p style="color:var(--text-muted);">
+        Barakalla! O'z lug'atingizdagi so'zlarni muvaffaqiyatli takrorladingiz! 🦉
+      </p>
+
+      <div class="result-score-circle">
+        <div class="score-num" id="scoreNum">8 / 10</div>
+        <div class="score-label">Natija</div>
+      </div>
+
+      <!-- Perfect score banner -->
+      <div class="perfect-score-banner" id="perfectScoreBanner" style="display:none;">
+        Ajoyib! Barcha 10 ta so'zni to'g'ri bildingiz! Haqiqiy so'z ustasisiz! 🏆
+      </div>
+
+      <!-- Missed words list -->
+      <div class="missed-words-section" id="missedWordsSection" style="display:none;">
+        <div class="missed-words-title">
+          <span>⚠️</span>
+          <span>Bilmagan so'zlaringiz (Takrorlash tavsiya etiladi):</span>
+        </div>
+        <div class="missed-words-list" id="missedWordsList"></div>
+      </div>
+
+      <div class="result-btn-row">
+        <button class="btn-action btn-unknown" id="btnReviewMissed" style="display:none;">
+          <span>🔁 Faqat bilmaganlarni takrorlash</span>
+        </button>
+        <button class="btn-action btn-known" id="btnNextRound">
+          <span>🚀 Yangi 10 ta so'z</span>
+        </button>
+        <button class="btn-action btn-flip" id="btnGoDict">
+          <span>📝 Mening Lug'atimga o'tish</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ================= SCREEN 3: MENING LUG'ATIM (Faqat o'zim kiritgan so'zlar) ================= -->
+    <section class="dictionary-screen" id="dictionaryScreen" style="display:none;">
+      <div class="dict-header-row">
+        <div>
+          <h2 style="font-size:1.5rem; font-weight:900;">
+            Mening Shaxsiy Lug'atim
+          </h2>
+          <span id="dictCount" style="font-size:0.9rem; color:var(--text-muted); font-weight:700;">
+            (0 ta so'z)
+          </span>
+        </div>
+        <div class="dict-actions-bar">
+          <button class="btn-action btn-known" id="btnOpenAddModal" style="padding:0.5rem 0.9rem; font-size:0.88rem;">
+            + Yangi so'z qo'shish
+          </button>
+          <button class="btn-action btn-flip" id="btnOpenBulkModal" style="padding:0.5rem 0.9rem; font-size:0.88rem; background:#fef3c7; color:#92400e; border-color:#fde68a;">
+            📂 Ommaviy kiritish (Matndan)
+          </button>
+          <button class="btn-action btn-known" id="btnPracticeMyWords" style="padding:0.5rem 0.9rem; font-size:0.88rem; background:linear-gradient(135deg, #6366f1, #a855f7);">
+            🎮 Yodlashni boshlash
+          </button>
+        </div>
+      </div>
+
+      <div class="dict-search-box">
+        <input type="text" id="dictSearchInput" class="search-input" placeholder="O'z so'zlaringiz ichidan qidiring (inglizcha, o'zbekcha yoki ruscha)...">
+      </div>
+
+      <div class="dict-grid" id="dictGrid"></div>
+    </section>
+
+  </div>
+
+  <!-- ================= MODAL: AUTH / SIGN UP & VERIFY CODE (In English) ================= -->
+  <div class="modal-overlay" id="authModal">
+    <div class="modal-box">
+      <div style="text-align:center; margin-bottom:1.2rem;">
+        <img src="logo.jpg" alt="Flippy Logo" class="auth-hero-logo">
+        <h2 style="font-weight:900; color:#ef4444; margin-top:0.75rem;">Welcome to Flippy!</h2>
+        <p style="font-size:0.88rem; color:var(--text-muted);">
+          Create your profile to start your vocabulary journey:
+        </p>
+      </div>
+
+      <!-- User Profile Form -->
+      <form id="authForm">
+        <div class="form-group">
+          <label>First Name *</label>
+          <input type="text" id="userFirstName" class="form-input" required placeholder="Name">
+        </div>
+
+        <div class="form-group">
+          <label>Last Name *</label>
+          <input type="text" id="userLastName" class="form-input" required placeholder="Last Name">
+        </div>
+
+        <!-- Date of Birth: Day, Month, Year -->
+        <div class="form-group">
+          <label>Date of Birth (Day / Month / Year) *</label>
+          <div style="display:flex; gap:0.5rem;">
+            <!-- Day -->
+            <select id="userBirthDay" class="form-select" style="flex:1;" required>
+              <option value="" disabled selected>Day</option>
+              <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+              <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+              <option value="7">7</option><option value="8">8</option><option value="9">9</option>
+              <option value="10">10</option><option value="11">11</option><option value="12">12</option>
+              <option value="13">13</option><option value="14">14</option><option value="15">15</option>
+              <option value="16">16</option><option value="17">17</option><option value="18">18</option>
+              <option value="19">19</option><option value="20">20</option><option value="21">21</option>
+              <option value="22">22</option><option value="23">23</option><option value="24">24</option>
+              <option value="25">25</option><option value="26">26</option><option value="27">27</option>
+              <option value="28">28</option><option value="29">29</option><option value="30">30</option>
+              <option value="31">31</option>
+            </select>
+
+            <!-- Month -->
+            <select id="userBirthMonth" class="form-select" style="flex:1.5;" required>
+              <option value="" disabled selected>Month</option>
+              <option value="1">January (1)</option>
+              <option value="2">February (2)</option>
+              <option value="3">March (3)</option>
+              <option value="4">April (4)</option>
+              <option value="5">May (5)</option>
+              <option value="6">June (6)</option>
+              <option value="7">July (7)</option>
+              <option value="8">August (8)</option>
+              <option value="9">September (9)</option>
+              <option value="10">October (10)</option>
+              <option value="11">November (11)</option>
+              <option value="12">December (12)</option>
+            </select>
+
+            <!-- Year -->
+            <select id="userBirthYear" class="form-select" style="flex:1.2;" required>
+              <option value="" disabled selected>Year</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+              <option value="2020">2020</option>
+              <option value="2019">2019</option>
+              <option value="2018">2018</option>
+              <option value="2017">2017</option>
+              <option value="2016">2016</option>
+              <option value="2015">2015</option>
+              <option value="2014">2014</option>
+              <option value="2013">2013</option>
+              <option value="2012">2012</option>
+              <option value="2011">2011</option>
+              <option value="2010">2010</option>
+              <option value="2009">2009</option>
+              <option value="2008">2008</option>
+              <option value="2007">2007</option>
+              <option value="2006">2006</option>
+              <option value="2005">2005</option>
+              <option value="2004">2004</option>
+              <option value="2003">2003</option>
+              <option value="2002">2002</option>
+              <option value="2001">2001</option>
+              <option value="2000">2000</option>
+              <option value="1995">1995</option>
+              <option value="1990">1990</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="margin-top:1.5rem;">
+          <button type="submit" class="btn-action btn-known" style="width:100%; font-size:1.05rem; padding:0.95rem;">
+            Continue 🚀
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: BITTA SO'Z QO'SHISH (Darajasiz, oddiy va qulay) ================= -->
+  <div class="modal-overlay" id="addWordModal">
+    <div class="modal-box">
+      <h3 style="margin-bottom:1rem; font-weight:900;">Yangi So'z Qo'shish</h3>
+      <form id="addWordForm">
+        <div class="form-group">
+          <label>Inglizcha so'z *</label>
+          <input type="text" id="newWordEn" class="form-input" required placeholder="Masalan: Rainbow">
+        </div>
+        <div class="form-group">
+          <label>O'zbekcha tarjimasi *</label>
+          <input type="text" id="newWordUz" class="form-input" required placeholder="Masalan: Kamalak">
+        </div>
+        <div class="form-group">
+          <label>Ruscha tarjimasi *</label>
+          <input type="text" id="newWordRu" class="form-input" required placeholder="Masalan: Радуга">
+        </div>
+        <div class="form-group">
+          <label>Misol gap yoki qo'shimcha izoh (ixtiyoriy)</label>
+          <input type="text" id="newWordExample" class="form-input" placeholder="Masalan: Look at the colorful rainbow.">
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.2rem;">
+          <button type="button" class="btn-action btn-flip" id="btnCancelModal" style="flex:none; padding:0.6rem 1rem;">Bekor qilish</button>
+          <button type="submit" class="btn-action btn-known" style="flex:none; padding:0.6rem 1.4rem;">Saqlash (+20 XP)</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: OMMAVIY SO'Z QO'SHISH (BULK) ================= -->
+  <div class="modal-overlay" id="bulkWordModal">
+    <div class="modal-box">
+      <h3 style="margin-bottom:0.6rem; font-weight:900;">Ommaviy So'zlar Kiritish (Bulk Import)</h3>
+      <p style="font-size:0.85rem; color:var(--text-muted); margin-bottom:1rem;">
+        Xohlagancha so'zlaringizni bir martada nusxalab kiritishingiz mumkin.
+        <br><strong>Format:</strong> <code>Inglizcha - O'zbekcha - Ruscha</code> (har bir so'z yangi qatordan)
+      </p>
+      <form id="bulkWordForm">
+        <div class="form-group">
+          <label>So'zlar ro'yxatini kiriting:</label>
+          <textarea id="bulkWordsTextarea" class="form-textarea" placeholder="Star - Yulduz - Звезда
+Sun - Quyosh - Солнце
+Book - Kitob - Книга
+Family - Oila - Семья"></textarea>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:0.5rem; margin-top:1.2rem;">
+          <button type="button" class="btn-action btn-flip" id="btnCancelBulkModal" style="flex:none; padding:0.6rem 1rem;">Bekor qilish</button>
+          <button type="submit" class="btn-action btn-known" style="flex:none; padding:0.6rem 1.4rem;">Hammasini Saqlash</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="app.js"></script>
+</body>
+</html>
